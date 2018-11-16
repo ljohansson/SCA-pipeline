@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#This links to the relevant datasets # soon config file
 #################################INPUTFILES AND DATASETS#######################################################
 ## move to config file soon
 encodedata=/groups/umcg-gdio/tmp04/umcg-ihidding/IWAN/wgEncodeRegTfbsClusteredV3.bed
@@ -11,7 +12,8 @@ Ensembl=/groups/umcg-gdio/tmp04/umcg-ihidding/IWAN/Ensembler_lexi
 
 
 ###############################################################################################################
-
+#These functions call the help and information for users. 
+#It also gives a list of the available tissue types.
 ###################################HELP AND INFORMATION########################################################
 
 function showHelp() {
@@ -110,9 +112,11 @@ tissuelist
 
 
 ###############################################################################################################
-
+#This function does the main analysis, it compares the variants with known transcription factor binding sites,
+#Then it takes the corresponding matrix and calculates a score that gives an indication of the predicted effect
+#of the variant. It also determines the closest gene to the site in an attempt to indicate both the gene and the
+#transcription factor.  
 ##############################ANALYSISSCRIPT###################################################################
-
 
 function Analysis_script () {
 	local inputfile=$1
@@ -214,9 +218,11 @@ function Analysis_script () {
 
 }
 ###############################################################################################################
-
-
-
+#Because the JASPAR database consists of predicted binding sites this function is used to validate the found 
+#binding sites up to a certain level. It compares the found sites with known chip-seq data for proteins found
+#within a certain region. This gives an indication whether or not the site can be a real binding site.   
+#The found site is compared with the encode database to see if in that region the transcription factor has been 
+#found aswell. 
 ##########################################VALIDATIONSCRIPT#####################################################
 function Validation_script () {
 
@@ -262,9 +268,9 @@ function Validation_script () {
 }
 
 ###############################################################################################################
-
-
-
+#If indicated this script will analyse the indicated tissuetypes for each gene and transcription factor found
+#this will return expression data per tissue per gene from the GTEx database.
+#
 ######################################TISSUETYPES##############################################################
 
 function Tissue_types () {
@@ -313,9 +319,9 @@ function Tissue_types () {
 }
 
 ###############################################################################################################
-
-
-
+#This function removes any duplicated lines formed by earlier functions, specifically when a single variant has
+#been found within overlapping binding sites. It also culls any columns added by previous functions that add 
+#duplicate data. ##potentially add this to the end of every function for increased adapability##
 #####################################DUPLICATIONFIX############################################################
 
 function Duplication_fix () {
@@ -367,9 +373,9 @@ function Duplication_fix () {
 }
 
 ###############################################################################################################
-
-
-
+#This function adds the newly made lines back to the file by removing the lines that were annotated from the input
+#and adding the annotated lines. It also sorts the data and adds the header back on top.
+#
 #####################################OUTPUTSHARE###############################################################
 
 function Output_share () {
@@ -387,9 +393,9 @@ function Output_share () {
 }
 
 ###############################################################################################################
-
-
-
+#The main analysis the input, sorts the data and calls all the functions.
+#
+#
 ########################################MAIN###################################################################
 
 while getopts "i:r:h:l" opt;
