@@ -335,7 +335,7 @@ function Tissue_types () {
 function Duplication_fix () {
 
 	input=$1
-
+	cat $input
 	#This calculates the total number of columns. 
 	local numberofcolumnsinfile=$(awk '{print NF}' $input | sort -nu | tail -n 1)
 	
@@ -366,14 +366,15 @@ function Duplication_fix () {
 	
 	#This combines both output files in one and turns spaces into tabs again. 
 	cat ${tmpdir}duplicatedline.tmp ${tmpdir}noduplicatedlines.tmp > ${tmpdir}output.txt
+	cat ${tmpdir}output.txt
 	tr ' ' \\t < ${tmpdir}output.txt > ${tmpdir}tmp && mv ${tmpdir}tmp ${tmpdir}output.txt
-#!!!!! Probably need to rename these.	
-	local column1=$((numberofcolumns+4))
-	local column2=$((numberofcolumns+7))
-	local column3=$((numberofcolumns+12))
-	local column4=$((numberofcolumns+21))
-	#This selects only the important columns from the list and separates them with a "|".
-	cut -d$'\t' -f${column1},${column2}-${column3},${column4}- ${tmpdir}output.txt | tr '\t' '|' > ${tmpdir}tempoutput.tmp
+
+	local BindingsiteLoc=$((numberofcolumns+4))
+	local BeginAnalysisData=$((numberofcolumns+7))
+	local EndAnalysisData=$((numberofcolumns+12))
+	local BeginGeneAndTissueData=$((numberofcolumns+21))
+	#This selects only the non-redundant columns from the list and separates them with a "|".
+	cut -d$'\t' -f${BindingsiteLoc},${BeginAnalysisData}-${EndAnalysisData},${BeginGeneAndTissueData}- ${tmpdir}output.txt | tr '\t' '|' > ${tmpdir}tempoutput.tmp
 	cut -d$'\t' -f1-${numberofcolumns} ${tmpdir}output.txt > ${tmpdir}input.tmp
 	paste ${tmpdir}input.tmp ${tmpdir}tempoutput.tmp > ${tmpdir}output.txt
 
@@ -419,14 +420,14 @@ done
 if [[ -z "${input:-}" ]]; then showHelp ; echo "No input is given" ; fi
 
 #Setting the output folder
-output="${HOME}/IWAN_output/"
-tmpdir="${HOME}/IWAN_output/tmp/"
+output="IWAN_output/"
+tmpdir="IWAN_output/tmp/"
 
 
 
 #Creating tmp and output directories to store created files.
-if [ ! -d "$output" ]; then mkdir ${HOME}/IWAN_output ; fi
-if [ ! -d "$tmpdir" ]; then mkdir ${HOME}/IWAN_output/tmp ; fi
+if [ ! -d "$output" ]; then mkdir IWAN_output ; fi
+if [ ! -d "$tmpdir" ]; then mkdir IWAN_output/tmp ; fi
 
 #Loading the required module
 module load BEDTools
@@ -458,7 +459,7 @@ grep '#' $fixedinput > ${tmpdir}header.txt
 
 #Here the all the data without the header is taken from the file and "chr" is added infront of the chromosome number as it is required by certain databases.
 grep -v '#'  $fixedinput > ${tmpdir}filenoheader.txt
-#!!!!!!!!!!!!!!!!!!!!!! Only works with annotated data. Might need to be changed for different annotation
+#Annotation Comes from SnpEff. The current version requires the SnpEff notation to filter on non-coding variants. Not having this annotation will lead to a large amount of false positives. 
 grep -v '#'  $fixedinput | grep -v 'protein_coding' | tr ' ' '_' > ${tmpdir}startfile.txt
 grep -v '#' $fixedinput | grep '5_prime_UTR'  | tr ' ' '_' >> ${tmpdir}startfile.txt
 
