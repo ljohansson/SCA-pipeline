@@ -1,0 +1,10 @@
+##fileformat=VCFv4.2
+##Welcome_to_the_test.vcf_file
+##This_file_is_used_to_test_if_the_current_version_of_IWAN_works_on_your_installation
+##This_header_should_be_visible_at_the_end_of_the_run.
+##You_should_see_the_second_line_annotated.
+##You_should_not_see_any_other_lines_annotated.
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE
+1	1277530	rs1	C	G	1	PASS	intergenic_region|This_is_the_negative_control	GT:AD:DP:GQ:PL	0/1:1,1:1:1:1,1,1
+18	12377529	rs2	C	G	1	PASS	intergenic_region|This_is_the_positive_control	GT:AD:DP:GQ:PL	0/1:1,1:1:1:1,1,1
+18	12377530	rs3	C	G	1	PASS	protein_coding|If_this_line_is_annotated_youre_not_using_SnpEff	GT:AD:DP:GQ:PL	0/1:1,1:1:1:1,1,1
