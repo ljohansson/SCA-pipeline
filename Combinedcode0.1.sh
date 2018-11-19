@@ -124,77 +124,82 @@ function Analysis_script () {
 
 	bedtools sort -i $inputfile > ${tmpdir}tmp && mv ${tmpdir}tmp $inputfile
 	cat $header $inputfile > ${tmpdir}bedtoolsfile.vcf
-	local filename=$(basename -- "$file")
-	local filenamefile="${filename%.*}"
-
+	#This loop performs bedtools on the input and each of the Jasparbed files with locations of the binding sites.
 	for f in ${Jaspardatafile}MA*; do
-	        local filename=$(basename -- "$f")
-		local filename="${filename%.*}"
-### Can be done in one line with basename $f .txt(?)
+	        local filename=$(basename -- "$f" .bed)
 
 		bedtools intersect -wa -a ${tmpdir}bedtoolsfile.vcf -wb -b $f > ${tmpdir}${filename}_output.tmp
+		#This checks if any positions were found in the Jasparbed files and then continues the analysis per line. 
 		if [ -s ${tmpdir}${filename}_output.tmp ];
 		then
 	                while IFS='' read -r line || [[ -n "$line" ]]; do
-	        
+	        		
+				#Storing relevant parts of the line in variables
 		                local columnstartpos=$((numberofcolumns + 2))
 	                        local columnstartposneg=$((numberofcolumns + 3))
 	                        local columnposstring=$(( numberofcolumns + 6 ))
 	                        local posornegstring=$( echo $line | awk -v PosorNeg="$columnposstring" '{ print $PosorNeg}' )
-	      
+	      			#Correcting the value of the mutation based on which strand it is found on. 
 		                if [ "$posornegstring" == "-" ]
 	                        then
 	                                local MutationLocation=$(echo "$line" | awk -v val=$columnstartposneg '{ print $val-$2+2}')
 	                        else
 	                                local MutationLocation=$(echo "$line" | awk -v val=$columnstartpos '{ print $2-$val+1}')
 	                        fi
-
+				#Correction in case the site is on the first position in which case its not actually in the site.
 	                        if [ "$MutationLocation" -eq 1 ] ; then continue ; fi
+				#Adds the name of the Jaspar binding site to the line and finds the corresponding matrix. 
 				local line="${line} ${filename}"
 	                        local Matrixfile=${Jasparmatrixfile}${filename}.jaspar
+				#This contains the name of the transcription factor. 
 	                        local Matrixgenename=$(sed '5q;d' $Matrixfile)
-
+				
+				#Calculating the total value per row of the matrix and getting the variant + original base from the input. 
 	                        local sumofmatrix=$(awk '{s+=$2}END{print s}' $Matrixfile)
-	                        local valueofmut=$(echo $line | cut -d' ' -f5)
-	                        local valueoforiginal=$(echo $line | cut -d' ' -f4)
-
-	                        if [ $(echo $valueofmut | wc -m) -gt 2 ] || [ $(echo $valueoforiginal | wc -m) -gt 2 ]
+	                        local Variant=$(echo $line | cut -d' ' -f5)
+	                        local OriginalBase=$(echo $line | cut -d' ' -f4)
+				#Special notation in case the variant is not a SNP, no current way of determining scores for longer variants. 
+	                        if [ $(echo $Variant | wc -m) -gt 2 ] || [ $(echo $OriginalBase | wc -m) -gt 2 ]
 	                        then
-	
+					#Instead of a score this just adds two dots as empty columns to the line
 	                                local line="${line} . . ${Matrixgenename}"
 	                                echo $line >> ${tmpdir}output.txt
 				else
+					#This takes all the values of the bases in the position of the variant.
 	                                local Columntobeadded=$(awk -v MutLoc="$MutationLocation" '{ print $1 $MutLoc }' $Matrixfile)
-	                                if [ "$posornegstring" == "-" ]
+	                               	#Correcting for negative strand variants. 
+					if [ "$posornegstring" == "-" ]
 	                                then
-	                                        local valueofmut=$( echo "$valueofmut" | tr ACGT TGCA )
-	                                        local valueoforiginal=$( echo "$valueoforiginal" | tr ACGT TGCA )
+	                                        local Variant=$( echo "$Variant" | tr ACGT TGCA )
+	                                        local OriginalBase=$( echo "$OriginalBase" | tr ACGT TGCA )
 	                                fi
-
-	                                local valofmut=$( echo "$valueofmut" | tr ACGT 1234 )
-	                                local valoforiginal=$( echo "$valueoforiginal" | tr ACGT 1234 )
-
-	                                local Newval=$(awk -v MutLoc=$MutationLocation -v Val=$valofmut 'FNR == Val {print $MutLoc}' $Matrixfile)
-	                                local Oldval=$(awk -v MutLoc=$MutationLocation -v Val=$valoforiginal 'FNR == Val {print $MutLoc}' $Matrixfile)
-
-	                                if [ -z "$Newval"  ]; then continue ; fi
-
-	                                local Newvalue=$(echo "scale=10 ; $Newval / $sumofmatrix + 0.001" | bc)
-	                                local Oldvalue=$(echo "scale=10 ; $Oldval / $sumofmatrix + 0.001" | bc)
-	                                local totalvalueofmutation=$(echo "scale=10 ; $Oldvalue / $Newvalue" | bc)
-#potentially not needed
+					
+					#Finds the specific value of the mutation by turning the bases into numbers corresponding with the values found in the matrix.
+	                                local PosOfVariant=$( echo "$Variant" | tr ACGT 1234 )
+	                                local PosOfOriginalBase=$( echo "$OriginalBase" | tr ACGT 1234 )
+	                                local VariantVal=$(awk -v MutLoc=$MutationLocation -v Val=$PosOfVariant 'FNR == Val {print $MutLoc}' $Matrixfile)
+	                                local OriginalVal=$(awk -v MutLoc=$MutationLocation -v Val=$PosOfOriginalBase 'FNR == Val {print $MutLoc}' $Matrixfile)
+				
+					#This might fix errors, currently disabled to see if any appear still.	
+	                                #if [ -z "$VariantVal"  ]; then continue ; fi
+					
+					#Calculations for determining the current score. Will be updated when more information is available.
+	                                local CalcVariantVal=$(echo "scale=10 ; $VariantVal / $sumofmatrix + 0.001" | bc)
+	                                local CalcOriginalVal=$(echo "scale=10 ; $OriginalVal / $sumofmatrix + 0.001" | bc)
+	                                local totalvalueofmutation=$(echo "scale=10 ; $CalcOriginalVal / $CalcVariantVal" | bc)
+					
+					#A check if the value is under 1 or not, this is done to increase the score the closer to 0 any of the positions are in the matrix. 
+					#The digits after the comma are taken off as bash does comparison with integers only. This should not cause problems. 
 					local totvalueofmutation=${totalvalueofmutation/.*}
-	                                
 					if [[ "$totvalueofmutation" -ge 1 ]]
-	                                then
+	                                then	
 	                                        local newmutationvalue=$(echo "scale=2 ; $totalvalueofmutation / 1" | bc)
 	                                else
 	                                        local newmutationvalue=$(echo "scale=2 ; -1 / $totalvalueofmutation" | bc)
 	                                fi
-					local Combinedcolumn="$(echo $Columntobeadded | tr ' ' ':' )"
-	                                local Combinedcolumnfix="$(echo $Combinedcolumn | cut -d':' -f1-4 )"
-	
-	                                local line="${line} ${Combinedcolumnfix} ${newmutationvalue} ${Matrixgenename}"
+					#This combines the column and cuts off the gene that was added previously. 
+					local Combinedcolumn="$(echo $Columntobeadded | tr ' ' ':' | cut -d':' -f1-4 )"
+	                                local line="${line} ${Combinedcolumn} ${newmutationvalue} ${Matrixgenename}"
 	
 	                                echo $line >> ${tmpdir}output.txt
 	                        fi
@@ -202,9 +207,11 @@ function Analysis_script () {
 	        fi
 	done
 
-
+	#This turns the whitespaces into tabs that are caused by storing the lines in a variable.
 	tr ' ' \\t < ${tmpdir}output.txt > ${tmpdir}tmp && mv ${tmpdir}tmp ${tmpdir}output.txt
+	#This line removes any empty lines or lines with just whitespaces from the file.
 	sed -i '1{/^[[:space:]]*$/d}' ${tmpdir}output.txt
+	#This set of lines prepares the file for a new bedtools input finds the closest gene and adds that information to the data.
 	bedtools sort -i ${tmpdir}output.txt > ${tmpdir}tmp && mv ${tmpdir}tmp ${tmpdir}output.txt
 	cat $header ${tmpdir}output.txt > ${tmpdir}tmp && mv ${tmpdir}tmp  ${tmpdir}output.vcf
 	bedtools closest -wb -b $Ensembl -a ${tmpdir}output.vcf -t last > ${tmpdir}Genelist.tmp
@@ -406,12 +413,12 @@ done
 
 if [[ -z "${input:-}" ]]; then showHelp ; echo "No input is given" ; fi
 
-output="IWAN_output/"
-tmpdir="IWAN_output/tmp/"
+output="${HOME}/IWAN_output/"
+tmpdir="${HOME}/IWAN_output/tmp/"
 
 #Creating tmp and output directories to store created files.
-if [ ! -d "$output" ]; then mkdir IWAN_output ; fi
-if [ ! -d "$tmpdir" ]; then mkdir IWAN_output/tmp ; fi
+if [ ! -d "$output" ]; then mkdir ${HOME}/IWAN_output ; fi
+if [ ! -d "$tmpdir" ]; then mkdir ${HOME}/IWAN_output/tmp ; fi
 
 module load BEDTools
 
