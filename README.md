@@ -1,7 +1,7 @@
 # IwaN1.1
-Integrated Workload Analysis Non-coding 
-This program annotates variants found in transcription factor binding sites.
-It also gives a score based on the predicted effect of the mutation. 
+Integrated Workload Analysis Non-coding 	
+This program annotates variants found in transcription factor binding sites.	
+It also gives a score based on the predicted effect of the mutation. 	
 
 Getting Started
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
