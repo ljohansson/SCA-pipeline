@@ -79,3 +79,4 @@ Acknowledgments
 Helpfunction code was used from the CramConversion.sh made by RoanKanninga: https://github.com/molgenis/ngs-utils/blob/master/CramConversion.sh
 Lennart Johansson for help with specific code and general guidance.
 Cleo van Diemen for general guidance. 
+
