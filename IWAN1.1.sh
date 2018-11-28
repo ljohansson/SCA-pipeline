@@ -10,15 +10,6 @@ Jaspardatafile=$(grep 'Jaspardatafile' config | cut -d '=' -f2)
 Jasparmatrixfile=$(grep 'Jasparmatrixfile' config | cut -d '=' -f2)
 Ensembl=$(grep 'Ensembl' config | cut -d '=' -f2)
 
-
-#encodedata=/groups/umcg-gdio/tmp04/umcg-ihidding/IWAN/wgEncodeRegTfbsClusteredV3.bed
-#genexprss=/groups/umcg-gdio/tmp04/umcg-ihidding/IWAN/GTEx_Analysis_2016-01-15_v7_RNASeQCv1.1.8_gene_median_tpm.gct
-#tissuelist=/groups/umcg-gdio/tmp04/umcg-ihidding/IWAN/tissuelist.txt
-#Jaspardatafile=/groups/umcg-gdio/tmp04/umcg-ihidding/IWAN/Jasparbed/
-#Jasparmatrixfile=/groups/umcg-gdio/tmp04/umcg-ihidding/IWAN/Jasparmatrix/
-#Ensembl=/groups/umcg-gdio/tmp04/umcg-ihidding/IWAN/Ensembler_lexi
-
-
 ###############################################################################################################
 #These functions call the help and information for users. 
 #It also gives a list of the available tissue types.
@@ -335,7 +326,6 @@ function Tissue_types () {
 function Duplication_fix () {
 
 	input=$1
-	cat $input
 	#This calculates the total number of columns. 
 	local numberofcolumnsinfile=$(awk '{print NF}' $input | sort -nu | tail -n 1)
 	
@@ -366,7 +356,6 @@ function Duplication_fix () {
 	
 	#This combines both output files in one and turns spaces into tabs again. 
 	cat ${tmpdir}duplicatedline.tmp ${tmpdir}noduplicatedlines.tmp > ${tmpdir}output.txt
-	cat ${tmpdir}output.txt
 	tr ' ' \\t < ${tmpdir}output.txt > ${tmpdir}tmp && mv ${tmpdir}tmp ${tmpdir}output.txt
 
 	local BindingsiteLoc=$((numberofcolumns+4))
