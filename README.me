@@ -51,8 +51,11 @@ Under attributes select structures untag the tagged options, select in order: GE
 Press results and download the file as cvs. Then put it in the preferred location. 
 Should this dataset become unavailable, any version should work as long as it uses GRCh37. 
 Keep in mind this could lead to slightly different results based on the version. 
-
-
+After downloading and unpacking the file this command needs to be run to ensure functionality. Where ${Ensemblefile} is the downloaded file. This can be run from the command line. 
+The newly created file is the one that has to be linked in the config. The old file can be removed. 
+"
+sed 's/,/\t/g' ${Ensemblfile} | tail -n +2 | sort -k 1,1 -k2,2n > Ensembl
+"
 
 Prerequisites
 This version of IWAN1.1 only requires BEDTools v2.25.0
@@ -80,3 +83,33 @@ Helpfunction code was used from the CramConversion.sh made by RoanKanninga: http
 Lennart Johansson for help with specific code and general guidance.
 Cleo van Diemen for general guidance. 
 
+
+#######################################################################################################
+Information about the added columns:
+
+#Binding site
+This column indicates the version of the reference genome where this site is found and the exact start and stop location of the binding site. Also indicated in between brackets is which strand the site is found on.  
+
+#Matrix name
+This column shows the name/number of the Jaspar database matrix for where the corresponding binding site has been found.
+
+#Matrix values
+These are the values of each nucleotide in the position of the found variant. This shows the amount of times a certain base has been found for any of the indicated variants. And this is where the next column: score, is derived from. 
+
+#Score
+The score is a preliminary indication of a predicted effect of the found variant on the transcription factor binding site. The score is determined by comparing the start and end values of the matrix for the found variant. With an extra correction for the values 
+reaching close to 0.  The score goes from 1001 to -1001, where a score of 1001 predicts a severe negative effect on the ability of the transcription factor to bind to the site, and where -1001 predicts a very strongly improved binding potential. 
+
+#Transcription factor
+This column has the name of the transcription factor for which the binding site has been found. This comes from the Jaspar matrix data. 
+
+#Gene
+This column has the name for the gene that has been found closest to the found variant, and is estimated to be the most likely affected gene. This is based on the specific data that has the promoter regions sequenced with the genes . This will not be valid data 
+for transcription factors that act on genes further away. 
+
+#Validation
+This column shows that the site is Validated. This indicates that this specific transcription factor has been found with chip seq data in the indicated region. 
+
+#Tissue expression
+An option in the program is to add tissue expression for the found gene and transcription factor in a list of 53 tissues that are available.
+#######################################################################################################
