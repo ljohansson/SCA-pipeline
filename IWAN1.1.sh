@@ -391,6 +391,28 @@ function Output_share () {
 	cat $header ${tmpdir}output.txt > ${output}${InputnameNoExtention}_output.vcf
 
 }
+##############################################################################################################
+#This function provides information about the run in a log.txt file. This can be used to gain easy acces to 
+#statistical data about multiple runs.
+#
+##############################################################################################################
+function Info_Script () {
+	
+	local Validated_Count=$(grep 'Validated' ${output}${InputnameNoExtention}_output.vcf | wc -l)
+	local Total_Noncoding_Count=$(wc -l ${tmpdir}startfile.txt | cut -d' ' -f1 )
+	local Total_Count=$(wc -l ${tmpdir}filenoheader.txt | cut -d' ' -f1 )
+	local DateOfrun=$(date)
+	local PercentNoncoding=$(echo "scale=4 ; $Total_Noncoding_Count / $Total_Count"  | bc )
+	local PercentNoncodingCorrection=$(echo "scale=2 ; $PercentNoncoding * 100 / 1"  | bc )
+	local PercentInBindingsite=$(echo "scale=4 ; $Validated_Count / $Total_Noncoding_Count"  | bc)
+	local PercentInBindingsiteCorrection=$(echo "scale=2 ; $PercentInBindingsite * 100 / 1"  | bc)
+	echo "The file run is: ${filename}. " >> ./IWAN_output/log.txt
+	echo "This analysis was run on: ${DateOfrun}. " >> ./IWAN_output/log.txt
+	echo "The total number of variants run is: ${Total_Count}. " >> ./IWAN_output/log.txt
+	echo "The total number of Non-coding variants run is: ${Total_Noncoding_Count}. This is ${PercentNoncodingCorrection}% of all variants run. " >> ./IWAN_output/log.txt
+	echo "The total number of variants in validated binding sites is: ${Validated_Count}. This is ${PercentInBindingsiteCorrection}% of all Non-coding variants run. " >> ./IWAN_output/log.txt
+	echo "##################################################" >> ./IWAN_output/log.txt
+}
 
 ###############################################################################################################
 #The main analysis the input, sorts the data and calls all the functions.
@@ -496,6 +518,9 @@ Duplication_fix ${tmpdir}output.txt
 #This recombines the found variants with the input file and stores it in a new output file.
 echo "Adding info to input file.."
 Output_share ${tmpdir}filenoheader.txt ${tmpdir}header.txt
+
+#This starts the Infoscript
+Info_Script
 
 #This clears the tmp directory and removes any leftover .txt files it also shows the modules currently loaded.
 rm ${tmpdir}/*
