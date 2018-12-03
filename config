@@ -5,5 +5,5 @@ genexprss=/path/to/file/GTEx_Analysis_2016-01-15_v7_RNASeQCv1.1.8_gene_median_tp
 tissuelist=/path/to/file/tissuelist.txt
 Jaspardatafile=/path/to/folder/Jasparbed/
 Jasparmatrixfile=/path/to/folder/Jasparmatrix/
-Ensembl=/path/to/file/Ensembler_lexi
+Ensembl=/path/to/file/Ensembl_GRCH37.p13.bed
 #########################################################################################
