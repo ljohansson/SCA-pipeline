@@ -440,9 +440,6 @@ tmpdir="IWAN_output/tmp/"
 if [ ! -d "$output" ]; then mkdir IWAN_output ; fi
 if [ ! -d "$tmpdir" ]; then mkdir IWAN_output/tmp ; fi
 
-#Loading the required module
-module load BEDTools
-
 #Loading the config file into the script.
 config
 
@@ -526,7 +523,6 @@ Info_Script
 
 #This clears the tmp directory and removes any leftover .txt files it also shows the modules currently loaded.
 rm ${tmpdir}/*
-module list
 
 echo "Analysis completed, have a nice day!"
 
