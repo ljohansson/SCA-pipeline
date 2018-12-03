@@ -4,30 +4,38 @@ This program annotates variants found in transcription factor binding sites.
 It also gives a score based on the predicted effect of the mutation.
 
 Getting Started
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
-Download the "IWAN1.1.sh" and the "config" files from https://github.com/IJHidding/SCA-pipeline 
-Add both files in the same place, then follow instructions below to install the relevant databases.
+These instructions will get you a copy of IWAN up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+Download the repository from https://github.com/IJHidding/IWAN and unpack.
+Then follow instructions below to install the relevant databases.
 Link the locations of the databases on your server in the config file.
+It is advised to add bedtools to the permanent path
 
 Encode:
 From this link : http://hgdownload.soe.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeRegTfbsClustered/ 
-Get the wgEncodeRegTfbsClusteredV3.bed file and put it on the preferred location. 
+Get the wgEncodeRegTfbsClusteredV3.bed file unpack the file and put it on the preferred location. 
 
 GTEx:
-Follow this link: https://gtexportal.org/home/datasets
+Follow this link: https://gtexportal.org/home/datasets under RNA-Seq Data.
 and then download "GTEx_Analysis_2016-01-15_v7_RNASeQCv1.1.8_gene_median_tpm.gct.gz"
 and unpack in the preffered location.
 
 Tissuelist from GTEx:
-The tissuelist was generated based on the columns in the GTEx database. The tissuelist for GTEX_analysis version 2016-01-15 van be found on the github page name "tissuelist.txt"
+The tissuelist was generated based on the columns in the GTEx database. The tissuelist for GTEX_analysis version 2016-01-15 is default by the downloaded files. To generate your own version of this file,
+put all the column names from row 1 into a text file separated by a newline. 
 
 Jaspardatafile:
-from this link: http://jaspar.genereg.net/downloads/ go to other data and download the BED files for genomic coodrinates of the sequences. 
+from this link: http://jaspar.genereg.net/downloads/ go to other data and download the BED files for genomic coordinates of the sequences. 
 Unpack this file in its own folder on the preferred location. 
 Only the .bed files are required. 
+After downloading run : 
+rm *.sites
+and then
+grep -vl 'hg19' * | xargs rm
+In the folder containing the JASPAR bedfiles. 
+
 
 Jasparmatrixfile:
-The Matrixfile can be downloaded from http://jaspar.genereg.net/downloads/ , then under the JASPAR collections (PFMs) select the individual PFMs (zip) and download the Non-redundant CORE collection.
+The Matrixfile can be downloaded from http://jaspar.genereg.net/downloads/ , then under the JASPAR collections (PFMs) select the individual PFMs (zip) and download the Non-redundant CORE collection in JASPAR format.
 Unpack this file in its own folder on the preferred location 
 
 Then run this script on all the downloaded files.
@@ -46,22 +54,40 @@ done
 
 Ensemble:
 This dataset can be found in the archives of the Ensemble website: http://feb2014.archive.ensembl.org/Homo_sapiens/Info/Index
-Then on top click the BioMart option, choose Ensembl Genes 75, then Homo sapiens genes (GRCh37.p13), for filters-REGION select Chromosome 1-Y.
-Under attributes select structures untag the tagged options, select in order: GENE:Chromosome Name, EXON: Exon Chr Start (bp), EXON: Chr End (bp), GENE:Strand, GENE: Associated Gene Name.
-Press results and download the file as cvs. Then put it in the preferred location. 
+Then on top click the BioMart option, choose Ensembl Genes 75, then Homo sapiens genes (GRCh37.p13), in the filters secontion under REGION select Chromosomes 1-Y.
+Under attributes select structures untag the tagged options under GENE, select in order: GENE:Chromosome Name, EXON: Exon Chr Start (bp), EXON: Chr End (bp), GENE:Strand, GENE: Associated Gene Name, these will show in order under attributes.
+Press results and download the file as csv, (The file extension shows .txt, this is normal). Then put it in the preferred location. 
 Should this dataset become unavailable, any version should work as long as it uses GRCh37. 
 Keep in mind this could lead to slightly different results based on the version. 
 After downloading and unpacking the file this command needs to be run to ensure functionality. Where ${Ensemblefile} is the downloaded file. This can be run from the command line. 
 The newly created file is the one that has to be linked in the config. The old file can be removed. 
 "
-sed 's/,/\t/g' ${Ensemblfile} | tail -n +2 | sort -k 1,1 -k2,2n > Ensembl
+sed 's/,/\t/g' ${Ensemblfile} | sed 's/^/chr/' | tail -n +2 | sort -k 1,1 -k2,2n | sed 's/^/chr/'> Ensembl_GRCH37.p13.bed
 "
 
 Prerequisites
 This version of IWAN1.1 only requires BEDTools v2.25.0
-
+Bedtools can be downloaded from:
+https://bedtools.readthedocs.io/en/latest/content/installation.html
 
 Installing
+
+Adding IWAN to temp path:
+
+For one time use, or testing it is recommended to add the program to path temporarily. This is done by running:
+export PATH=$PATH:/path/to/directory/IWAN/
+It is important to add execute rights to the IWAN1.1 file, this is done by running: chmod +x IWAN1.1
+then test with echo $PATH and it should show at the end of the line.
+Then try running by running: IWAN , and see if the help function appears.
+These functions will leave your path when the console is closed. If you won't be using IWAN more than a couple times it is not necessary to add it to path permanently. 
+
+Adding IWAN to perm path:
+
+To add IWAN to the perm path open the ~/.bashrc file, for example with nano (:nano ~/.bashrc) and simply add export PATH=$PATH:/path/to/directory/IWAN/ to the bottem of that file. 
+Note: This works with BASH only. Other shells will most likely have different ways to add to path permanently.  
+
+These same steps have to be performed for bedtools. 
+
 After downloading the databases and the IWAN1.1 and the config files, make sure that the databases are linked in the config file and that the config and IWAN1.1 files are in the same location. 
 
 To test if the installation is correct download the test.vcf from the github page. Then run the program with the command $: sh IWAN1.1.sh -i test.vcf -t 1
@@ -79,7 +105,7 @@ License information is available on the github page (https://github.com/IJHiddin
 
 
 Acknowledgments
-Helpfunction code was used from the CramConversion.sh made by RoanKanninga: https://github.com/molgenis/ngs-utils/blob/master/CramConversion.sh
+Helpfunction code was used from the CramConversion.sh made by Roan Kanninga: https://github.com/molgenis/ngs-utils/blob/master/CramConversion.sh
 Lennart Johansson for help with specific code and general guidance.
 Cleo van Diemen for general guidance. 
 
