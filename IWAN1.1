@@ -2,14 +2,14 @@
 
 #This links to the relevant datasets # soon config file
 #################################INPUTFILES AND DATASETS#######################################################
-## move to config file soon
-encodedata=$(grep 'encodedata' config | cut -d '=' -f2)
-genexprss=$(grep 'genexprss' config | cut -d '=' -f2)
-tissuelist=$(grep 'tissuelist' config | cut -d '=' -f2)
-Jaspardatafile=$(grep 'Jaspardatafile' config | cut -d '=' -f2)
-Jasparmatrixfile=$(grep 'Jasparmatrixfile' config | cut -d '=' -f2)
-Ensembl=$(grep 'Ensembl' config | cut -d '=' -f2)
-
+function config () {
+	encodedata=$(grep 'encodedata' config | cut -d '=' -f2)
+	genexprss=$(grep 'genexprss' config | cut -d '=' -f2)
+	tissuelist=$(grep 'tissuelist' config | cut -d '=' -f2)
+	Jaspardatafile=$(grep 'Jaspardatafile' config | cut -d '=' -f2)
+	Jasparmatrixfile=$(grep 'Jasparmatrixfile' config | cut -d '=' -f2)
+	Ensembl=$(grep 'Ensembl' config | cut -d '=' -f2)
+}
 ###############################################################################################################
 #These functions call the help and information for users. 
 #It also gives a list of the available tissue types.
@@ -440,9 +440,8 @@ tmpdir="IWAN_output/tmp/"
 if [ ! -d "$output" ]; then mkdir IWAN_output ; fi
 if [ ! -d "$tmpdir" ]; then mkdir IWAN_output/tmp ; fi
 
-#Loading the required module
-module load BEDTools
-
+#Loading the config file into the script.
+config
 
 #This will store the file in the input folder as to leave the original input file intact.
 
@@ -524,7 +523,6 @@ Info_Script
 
 #This clears the tmp directory and removes any leftover .txt files it also shows the modules currently loaded.
 rm ${tmpdir}/*
-module list
 
 echo "Analysis completed, have a nice day!"
 
